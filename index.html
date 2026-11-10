@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071311">
+  <meta name="description" content="Tableau de bord de pilotage de la production IBB">
+  <title>IBB — Pilotage Production</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="data.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <aside class="sidebar">
+    <a class="brand" href="#" aria-label="IBB Pilotage Production">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span><strong>IBB</strong><small>Pilotage production</small></span>
+    </a>
+
+    <div class="snapshot-pill"><span></span> Snapshot sécurisé</div>
+
+    <nav class="main-nav" aria-label="Navigation principale">
+      <button class="nav-item active" data-view="overview">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/></svg>
+        <span>Vue d’ensemble</span>
+      </button>
+      <button class="nav-item" data-view="energy">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-8 12h7l-1 8 8-12h-7l1-8Z"/></svg>
+        <span>Énergie & ratios</span>
+      </button>
+      <button class="nav-item" data-view="anomalies">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Zm0 5.4v5.7m0 3.1v.1"/></svg>
+        <span>Anomalies</span>
+      </button>
+      <button class="nav-item" data-view="data">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16M8 3v18"/></svg>
+        <span>Données détaillées</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="database-icon"><span></span><span></span><span></span></div>
+      <div><small>Source embarquée</small><strong id="sideDateRange">—</strong><em>Aucun accès SQL</em></div>
+    </div>
+  </aside>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="mobile-brand"><span class="brand-mark"><i></i><i></i><i></i></span><strong>IBB</strong></div>
+      <div class="date-control">
+        <button id="previousDate" class="icon-button" aria-label="Jour précédent">
+          <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <label>
+          <span>Date du rapport</span>
+          <input id="dateFilter" type="date" aria-label="Date du rapport">
+        </label>
+        <button id="nextDate" class="icon-button" aria-label="Jour suivant">
+          <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="shift-filter" role="group" aria-label="Poste">
+        <button class="active" data-shift="Tous">24 h</button>
+        <button data-shift="Jour"><span class="shift-dot day"></span>Jour</button>
+        <button data-shift="Soir"><span class="shift-dot evening"></span>Soir</button>
+        <button data-shift="Nuit"><span class="shift-dot night"></span>Nuit</button>
+      </div>
+      <button id="shareButton" class="share-button">
+        <svg viewBox="0 0 24 24"><path d="M8 12h8m-4-4 4 4-4 4M5 5h7M5 19h7M5 5v14"/></svg>
+        <span>Copier le lien</span>
+      </button>
+    </header>
+
+    <section id="view-overview" class="view active">
+      <div class="page-heading reveal">
+        <div>
+          <div class="eyebrow"><span></span> Centre de pilotage</div>
+          <h1>Performance <em>industrielle</em></h1>
+          <p id="overviewSubtitle">Vue consolidée de la production</p>
+        </div>
+        <div class="freshness">
+          <span class="pulse-ring"></span>
+          <div><small>Dernière synchronisation</small><strong id="generatedAt">—</strong></div>
+        </div>
+      </div>
+
+      <div id="kpiGrid" class="kpi-grid reveal delay-1"></div>
+
+      <div class="dashboard-grid reveal delay-2">
+        <article class="panel chart-panel span-8">
+          <div class="panel-head">
+          <div><span class="panel-kicker">Évolution</span><h2 id="trendTitle">Production par poste</h2></div>
+            <div class="legend"><span class="legend-fab">Fabrication</span><span class="legend-kiln">Sortie four</span></div>
+          </div>
+          <div id="trendChart" class="chart" aria-label="Courbe de production"></div>
+        </article>
+
+        <article class="panel span-4">
+          <div class="panel-head"><div><span class="panel-kicker">Comparatif</span><h2>Performance par poste</h2></div></div>
+          <div id="shiftBars" class="shift-bars"></div>
+        </article>
+
+        <article class="panel span-7">
+          <div class="panel-head"><div><span class="panel-kicker">Flux matière</span><h2>De la fabrication à l’emballage</h2></div><span class="unit-badge">tonnes</span></div>
+          <div id="flowPipeline" class="flow-pipeline"></div>
+        </article>
+
+        <article class="panel span-5">
+          <div class="panel-head"><div><span class="panel-kicker">Mix produit</span><h2>Production par brique</h2></div></div>
+          <div id="brickMix" class="donut-layout"></div>
+        </article>
+
+        <article class="panel span-12 table-panel">
+          <div class="panel-head"><div><span class="panel-kicker">Détail produit</span><h2>Production par type de brique</h2></div><span id="brickCount" class="unit-badge">—</span></div>
+          <div class="table-scroll"><table><thead><tr><th>Type</th><th>Fabrication</th><th>Entrée four</th><th>Sortie four</th><th>Emballage</th><th>Rendement four</th></tr></thead><tbody id="brickTable"></tbody></table></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="view-energy" class="view">
+      <div class="page-heading reveal">
+        <div><div class="eyebrow energy"><span></span> Efficacité énergétique</div><h1>Énergie & <em>ratios</em></h1><p id="energySubtitle">Consommations et intensité par tonne produite</p></div>
+        <div class="formula-chip">Calculs alignés sur la GMAO</div>
+      </div>
+      <div id="energyKpis" class="kpi-grid energy-grid reveal delay-1"></div>
+      <div class="dashboard-grid reveal delay-2">
+        <article class="panel span-7">
+          <div class="panel-head"><div><span class="panel-kicker">Électricité</span><h2 id="electricTitle">Profil électrique du 5 novembre</h2></div><span class="unit-badge">kWh/t</span></div>
+          <div id="electricTrend" class="chart"></div>
+        </article>
+        <article class="panel span-5">
+          <div class="panel-head"><div><span class="panel-kicker">Répartition 24 h</span><h2>Plages tarifaires</h2></div></div>
+          <div id="electricMix" class="donut-layout"></div>
+        </article>
+        <article class="panel span-6">
+          <div class="panel-head"><div><span class="panel-kicker">Gaz</span><h2>Répartition des usages</h2></div><span id="gasCoefficient" class="unit-badge">Coef. —</span></div>
+          <div id="gasBreakdown" class="breakdown"></div>
+        </article>
+        <article class="panel span-6">
+          <div class="panel-head"><div><span class="panel-kicker">Fuel</span><h2>Répartition des usages</h2></div><span class="unit-badge">volume</span></div>
+          <div id="fuelBreakdown" class="breakdown"></div>
+        </article>
+        <article class="panel span-12 formula-panel">
+          <div class="panel-head"><div><span class="panel-kicker">Traçabilité</span><h2>Règles de calcul utilisées</h2></div></div>
+          <div id="formulaCards" class="formula-cards"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="view-anomalies" class="view">
+      <div class="page-heading reveal">
+        <div><div class="eyebrow danger"><span></span> Analyse des arrêts</div><h1>Anomalies de <em>production</em></h1><p id="anomalySubtitle">Causes, durées et unités impactées</p></div>
+        <div id="anomalyHero" class="anomaly-hero"></div>
+      </div>
+      <div class="dashboard-grid reveal delay-1">
+        <article class="panel span-7">
+          <div class="panel-head"><div><span class="panel-kicker">Pareto</span><h2>Principales causes</h2></div><span class="unit-badge">minutes</span></div>
+          <div id="causeBars" class="cause-bars"></div>
+        </article>
+        <article class="panel span-5">
+          <div class="panel-head"><div><span class="panel-kicker">Impact</span><h2>Durée par unité</h2></div></div>
+          <div id="unitMix" class="donut-layout"></div>
+        </article>
+        <article class="panel span-12 table-panel">
+          <div class="panel-head"><div><span class="panel-kicker">Journal</span><h2>Détail des anomalies</h2></div><span id="anomalyCount" class="unit-badge">—</span></div>
+          <div class="table-scroll"><table><thead><tr><th>Cause</th><th>Unité</th><th>Section</th><th>Poste</th><th>Occurrences</th><th>Durée</th></tr></thead><tbody id="anomalyTable"></tbody></table></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="view-data" class="view">
+      <div class="page-heading reveal">
+        <div><div class="eyebrow data"><span></span> Données embarquées</div><h1>Détail & <em>traçabilité</em></h1><p>Lecture instantanée de la copie préparée — aucune requête vers SQL Server</p></div>
+        <button id="downloadCsv" class="download-button"><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 19h16"/></svg>Exporter la journée</button>
+      </div>
+      <div class="dashboard-grid reveal delay-1">
+        <article class="panel span-12 table-panel">
+          <div class="panel-head"><div><span class="panel-kicker">Postes</span><h2>Rapports Jour · Soir · Nuit</h2></div><span id="reportStatus" class="unit-badge">—</span></div>
+          <div class="table-scroll"><table class="wide-table"><thead><tr><th>Poste</th><th>Fabrication t</th><th>Entrée four t</th><th>Sortie four t</th><th>Emballage</th><th>Palettes</th><th>Arrêts</th><th>Fuel</th><th>Gaz</th></tr></thead><tbody id="shiftTable"></tbody></table></div>
+        </article>
+        <article class="panel span-5 snapshot-card" id="snapshotCard"></article>
+        <article class="panel span-7">
+          <div class="panel-head"><div><span class="panel-kicker">Périmètre</span><h2>Contenu du tableau de bord</h2></div></div>
+          <div class="scope-grid">
+            <div><span>01</span><strong>Fabrication</strong><small>Quantités, tonnages, briques</small></div>
+            <div><span>02</span><strong>Fours</strong><small>Entrées, sorties, rendement</small></div>
+            <div><span>03</span><strong>Emballage</strong><small>Production, palettes, feuillard</small></div>
+            <div><span>04</span><strong>Énergie</strong><small>Fuel, gaz, électricité, ratios</small></div>
+            <div><span>05</span><strong>Anomalies</strong><small>Causes, unités, durées</small></div>
+            <div><span>06</span><strong>Historique</strong><small>Toutes les dates disponibles</small></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer><span>IBB · Dashboard Production</span><span id="footerSnapshot">Snapshot sécurisé</span></footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><div class="no-script">JavaScript doit être activé pour afficher ce dashboard.</div></noscript>
+</body>
+</html>
